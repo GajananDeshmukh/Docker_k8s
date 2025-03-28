@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: taint-toleration-pod
+spec:
+  tolerations:
+  - key: "k8s-trainee"
+    operator: "Equal"
+    value: "yes"
+    effect: "NoSchedule"
+  containers:
+  - name: nginx
+    image: nginx

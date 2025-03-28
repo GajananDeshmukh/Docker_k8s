@@ -658,6 +658,17 @@ kubectl get ing
 
 kubectl get pods -n ingress-nginx
 kubectl get svc -n ingress-nginx
+ kubectl get pods -n kube-system /to cheeck network plugin 
+ 
+ so we get advance networking through calico.
+ 
+ service mesh install anoter container called proxy and this proxy is manager by control plane istio control plane . 
+ istio is service mesh project.
+ so calico is very well with istio
+ 
+ 7 layer please do not touch sea pet animals
+ 
+ k get pods -n istio-system
 
 
 
