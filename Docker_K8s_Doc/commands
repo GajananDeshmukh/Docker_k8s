@@ -1,0 +1,156 @@
+#Install Docker
+https://docs.docker.com/engine/install/ubuntu/
+
+#to check docker images
+docker images or docker image ls.
+
+#to chekck docker container running
+docker ps -a
+
+#to check status of docker
+systemctl status docker
+
+# to search image that official docker hub
+docker search image_name -f is-official=true #by default docker hub
+docker search registry.redhat.io/image_name
+
+# to download image
+docker pull image_name
+
+# to create docker container
+docker container create --name=c1 image_name
+
+#to start docker container
+docker start container_name
+
+#to stop container
+docker stop container_name - c{1..5} # it release from ram also
+
+#to remove container
+docker rm container_name
+
+# to create run and start container
+docker run --name-c1 httpd
+docker run -d --name=c1 httpd #its detached container from terminal and start background
+
+# to find ip address or inspect docker container
+docker inspect container_name | grep -i ipaddr
+
+# to check docker logs 
+docker logs container_name
+
+#to run on specific ports and specifc name
+docker run -d --name=vadapav -p 9090:80 httpd
+
+
+#to check iptables
+iptables -v -t nat -L
+
+#to check ip address of ubuntu
+ip a s
+ifconfig -a
+
+#to execrute docker container
+docker exec -it vadapav bash #ip - is interactive terminal or input standards
+
+#to run docker container mysql
+docker run -d --name=db1 -p 9797:3306 -e MYSQL_ROOT_PASSWORD=123 mysql #-e enviroment variable
+docker exec -it mysql bash
+mysql -u root -p123
+
+# to create volume
+docker run -d --name=npci-db1 -v 
+
+#to delete all containers at a time
+docker rm -f $(docker ps -a -q) #-q gives all ids
+
+#to create container with  volume dump
+docker run -d --name=db1 -v /npci-db:/var/lib/mysql -p 9787:3306 -e MYSQL_ROOT_PASSWORD=123 mysql
+
+#to create container with  volumes
+docker run -d --name=db1 -v /npci-db:/var/lib/mysql -p 9787:3306 -e MYSQL_ROOT_PASSWORD=123 mysql
+
+
+#to create volume
+docker volume create npcidb2
+
+#to create docker image from docker file
+docker build -t <image_name>:<tag> <path_to_dockerfile>
+
+#to create docker image from docker file without prvious builds
+docker build --no-cache -t myapp:latest .
+
+#to check any command while building
+docker build --help
+
+#to add arguments while building
+docker build --build-arg arg=value -t <image_name>:<tag> <path_to_dockerfile>
+
+#to override any env while running container
+docker run -d --name=db1 -p 9797:3306 -e MYSQL_ROOT_PASSWORD=123 mysql #-e enviroment variable
+
+#to describe image
+docker inspect image_name
+
+#to pull docker image
+# image name format: [registry-hostname[:port]/]repository[:tag]
+docker pull docker.io/redis:latest
+default registry id docker.io and tag is latest only so we can use only docker pull redis
+### pull an image using a specific tag:
+docker pull redis:6.0.9
+docker image ls
+```
+
+### to pull an image using a specific digest:
+
+```bash
+docker pull redis@sha256:48c1431bed43fb2645314e4a22d6ca03cf36c5541d034de6a4f3330e7174915b
+docker image ls
+```
+
+### to pull un-official image:
+
+```bash
+docker pull docker.io/nagabhushanamn/greeting-service:v1
+docker image ls
+```
+
+### to tag an image:
+docker tag nagabhushanamn/greeting-service:v1 nagabhushanamn/greeting-service:tng
+docker image ls
+
+
+### to build an image for multi-architecture:
+docker buildx build --platform linux/amd64,linux/arm64 -t java-web-service:v11 .
+
+# to enable this buildx tool
+docker buildx create --use
+docker buildx ls 
+
+### to setup a private registry:
+
+```bash
+docker run -d -p 5000:5000 --name registry registry:2
+docker ps
+curl http://localhost:5000/v2/_catalog
+```
+
+### to tag an image and push it to the private registry:
+
+```bash
+docker tag java-web-service:v1 localhost:5000/java-web-service:v1
+docker image ls
+docker push localhost:5000/java-web-service:v1
+
+check memory notion
+swap memory means disk memory 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+

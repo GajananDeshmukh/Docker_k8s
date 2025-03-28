@@ -1,0 +1,694 @@
+DOCKER K8S TRAINING
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DATE - 24 Feb
+in new deployment harddiskh instead of os we deployed hypervisor(esxi, hyperv, citrix)- purpose is to launch vertual machine - to deploy application 
+A hypervisor is a piece of software, hardware, or a combination of both, that creates and manages virtual machines (VMs) on a computer. It enables multiple operating systems to run concurrently on a single physical machine by abstracting the hardware and allocating resources such as CPU, memory, and storage to each virtual machine.
+
+There are two types of hypervisors:
+
+Type 1 (Bare-metal hypervisor): This type runs directly on the physical hardware without needing an underlying operating system. It's often used in data centers and enterprise environments. Examples include VMware ESXi, Microsoft Hyper-V, and Xen.
+
+Type 2 (Hosted hypervisor): This type runs on top of a host operating system, which manages the hardware, and the hypervisor manages the virtual machines. Examples include VMware Workstation, Oracle VirtualBox, and Parallels Desktop.
+
+Hypervisors are essential for virtualization, allowing more efficient use of hardware, isolation between virtual machines, and the ability to run different operating systems on the same physical machine.
+
+in 2013 now above harddidk we have os above ubuntu os we have conainer engine - docker, podman, containerd,- containirzation for deploy application,
+container is a linx os process. we can create no of container is equal to number of processes
+whenever we open any file it open ram.
+container is lightwrigh also
+1 core =1000mcores
+we can assign 1 mcore to one conainer and its execute in 1 sec also
+all above is deployment strategy
+----------------------------------------------------------------------------------------------
+
+
+
+serverless architecture - aws lambda
+---------------------------------------------------------------------------------------
+build code - docker file(instructions )- image(imag registry to store image dockerhub) - container
+
+-------------------------------------------------------------------------------------
+container lifecycle
+create (created)- start (running) -> we can use 2 in 1 command - docker run
+---------------------------------------------------------------------------------------
+# docker pause its in ram but in isolation mode
+
+we have virtual machine which have eth0 lan card having ports (doors) - and container having port also,webserver container running port 80 , so we need to map eth port to container port - so its mapping port
+iptables is technology who this done thing, in firewall also iptables is there.
+iptables set rule for ports,
+
+after exec it in porrt we can check ip address of container - cat /etc/os-release 
+-----------------------------------------------------------------------------------------------------
+if we want persistent data then volumes is used
+1 bind mount 
+2 volume
+3 tmpfs --(temp)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+when we create db it create in /var/lib/mysql/ folder
+so we can directly map some sace suppose 100 gb outside container and virutlization we create folder /npci-db and map /var/lib/mysql/ - mappping is done by -v /npci-db/var/lib/mysql - this is mount bind
+docker run -d --name=db1 -v /npci-db:/var/lib/mysql -p 9787:3306 -e MYSQL_ROOT_PASSWORD=123 mysql # so if we change in our lcoal file it will reflaceted in docker container #bind_mount
+docker run -d --name=db1 -v npci-db:/var/lib/mysql -p 9787:3306 -e MYSQL_ROOT_PASSWORD=123 mysql #volume #it is in creat /var/lib/docker - it handle by docker
+docker volume create npcidb2 -volume -  /var/lib/docker/volumes/npcidb2
+
+tmpfs create in ram if container is deleted we will remove it
+
+
+Bind Mount: Directly ties container to host filesystem, useful for sharing specific directories or files.
+Volume: Managed storage for persistent data, useful for ensuring data survives container removal.
+tmpfs: Temporary in-memory storage for ephemeral data, useful for non-persistent, fast access.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+day 1 naga sir.
+microservices.io - deployment strategy 
+docker version - we have taken docker client, docker server we use docker client to run the command internally docker hit curl/http call command for docker server.
+instead of docker images now we called OCI image- open container intiative , it is under linux foundation, OCI is lightweight governance
+containerd is leader in container in market it is coming from CNCF.
+in early days k8s use docker as container but now it is using containderd because of lightweight
+container- isolated area of os with resource limits applied.
+linux gives us isolation that we can run proceeses independelty in one terminal
+namespaces is handle isolation and controlgroups is handle resources this is provide by linu kerel
+os provide processtree, filesystem, user,network interfaces to run anything. so all virtualization is the container.
+vm - virutlizing hardware - best to run heay application
+container - virtualizing os - best to run microservices
+ideally we have one process per container - processid, network, filesystem, interprocesscommunicatio, uts, user- default we have root user. container having this much internally.
+docker image is multilayered
+first dot cloud uses lxc linux container and their aufs to make lib container this is first introduce docker , company chnage name as docker 
+moern docker uses  - docker damon make grpc call to container d it is high level manage- container d gives to runc(shim process) it interact with kernel and make image. 
+docker we can use single host but for multiple host and for advance feature we need to use k8s.
+CNCF foundation for cloud computing - sandbox, incubative, graduated project.
+----------------------------------------------------------------------------------------------------------------------------
+DAY 2-naga sir
+container runtime helps to build image
+its have its old daemon it takes request and give to buildkit for bulding and with command docker build -t we can create.
+17 instructions we have towith that buildkit take that and build image
+make sure our image contain what is required to run process
+from should be first instruction only another command is allowed above from is arg to take any argument and store key and value
+----DockerFile---------
+FROM <base-image> - make sure this base image is official, base image should be smaller, its should be relevant to our application. on this base image build kit create temporary container.
+WORKDIR /app - in temporary container it will create app directory , bydefault root directory is there.
+RUN <build-time-commands> - this command run only build time, e.g. to install curl - RUN apt install curl & remove .tmp
+COPY local-files destination - local files and directories
+ADD remote-files destination - both local or remote files and directories
+ENV foo=bar - it will set env while building image only.
+USER nobody - by default root user if we want to set noone user we can set it
+EXPOSE port - it expose port outside //it is not mandatory //it is documentation purpose only
+STOPSIGNAL SIGINT - default is for interuppted like all transaction happen then only it will terminate when we use docker stop it will take this apporach
+SHELL bash - while executing shell we can user
+LABEL label1=value - //add meta to an image //documentation
+MAINTAINER nag - //documentation 
+HEALTHCHECK http,cmd - to ensure container is healthy
+VOLUME <storage-path> 
+CMD ["java","-jar","app1.jar"] - WHAT PROCESS WE WANT TO RUN WHEN POEPLE RUN CONTAINER FROM THIS IMAGE, we can give in docker run image java -jar app2.jar it will overrride.
+ENTRYPOINT ["java","-jar","app1.jar"]  - it is same as cmd but it will not override only app1. jar will run
+CMD ['--profile',"dev"] - so when we run entrypoint and cmd together cmd will append to entrypoint and through cli we can give
+ARG path=/app - through cli we can give build time arugment
+ONBUILD - Defines a trigger for a command that will be executed later when the image is used as a base image. Typically used in base images that are intended to be extended by other images.
+we can use base image scratch - 0 size image but it doesnt have shell and all 
+
+
+### Dockerfile Best Practices
+Some best practices for writing Dockerfiles include:
+Use official base images.
+Minimize the number of layers by combining commands.
+Use multi-stage builds to reduce image size.
+Leverage .dockerignore to exclude unnecessary files.
+Specify exact versions of dependencies.
+Use ARG for dynamic values.
+Use labels for metadata.
+Use health checks to monitor container health.
+think which are not change often be on top of the docker file
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+golang docker file example
+Docker file 1
+# Stage 1: Build the Go binary
+FROM golang:1.21 AS builder
+
+WORKDIR /app
+
+# Copy go.mod and go.sum for dependency resolution
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the entire source code
+COPY . .
+
+# Build the Go application
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server
+
+
+
+# Stage 2: Create a minimal runtime image
+FROM alpine:latest
+
+WORKDIR /root/
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/server .
+
+# Expose port
+EXPOSE 8080
+
+# Run the application
+ENTRYPOINT ["./server"]
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Docker file 2
+# Build Stage
+FROM golang:1.20 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN go mod tidy
+RUN go build -o myapp .
+
+# Runtime Stage
+FROM debian:bullseye-slim
+
+WORKDIR /app
+COPY --from=builder /app/myapp .
+
+RUN chmod +x /app/myapp
+
+ENTRYPOINT ["/app/myapp"]
+CMD ["--help"]  # Default argument (optional)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Dockerfile 1: By copying the go.mod and go.sum first and running go mod download before copying the source code, it optimizes Docker's caching for dependencies. If dependencies don’t change, Docker skips the go mod download step in subsequent builds, saving time.
+Dockerfile 2: By copying everything in one step and running go mod tidy afterward, it loses the opportunity to cache dependencies efficiently, leading to potentially slower builds, especially when only Go source code changes and not the dependencies.
+
+--------------------------------------------------------------------------------------------------------------------------------------
+docker registery have repo and inside that we have different tags image - with tag we have different platform images
+# image name format: [registry-hostname[:port]/]repository[:tag]
+docker pull docker.io/redis:latest
+default registry id docker.io and tag is latest only so we can use only docker pull redis
+
+#to describe image in json object.
+docker inspect image_name
+
+by default dockeer have overlay2 storage driver
+every instructio of docker file is layer - like run cmd add copy
+and also temp container also will layer .
+so java image build into multiple layer.
+stack of multiple layer is image.
+
+#to check commands we are using in docker file
+docker history image_name
+
+we have dive tool to check what files in docker file - it is external tool.
+any image with user id it not official image, without userid it is official.
+
+docker images are platform dependent
+platform: os + processor-arc - linux + amd64
+
+when we do do docker pull image_name - in header we will send platform info so registery wil send that image onl
+docker pull --platform linux/arm64 redis.
+
+suppose we creating in window but on vm we have different processor so we can build image using buildx
+docker buildx build --platform linux/amd64,linux/arm64 -t java-web-service:v11 .
+
+we need to enable this buildx tool
+docker buildx create --use
+docker buildx ls 
+
+### setup a private registry:
+
+```bash
+docker run -d -p 5000:5000 --name registry registry:2
+docker ps
+curl http://localhost:5000/v2/_catalog
+```
+
+### tag an image and push it to the private registry:
+
+```bash
+docker tag java-web-service:v1 localhost:5000/java-web-service:v1
+docker image ls
+docker push localhost:5000/java-web-service:v1
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DAY 3 - naga sir 
+docker ps -a -q - -q is for quiet only return ids of container.
+
+#to create container
+docker run ubuntu:20.04
+
+#to check docker container
+docker container ls -a
+if none process started then container will exit
+
+#to run with bash process
+docker run -it ubuntu:20.04 - we are interacting with bash process, beacause in docker command bash is there
+in bash we can check process - ps aux- to see running processes
+ 
+### Overriding the default command
+
+docker history ubuntu:20.04
+docker run -it ubuntu:20.04 /bin/sh - because in cmd it is given /bin/bash so we will override it
+
+
+### Run additional command in a running container
+docker exec -it my-ubuntu /bin/bash - by default every container have either bash or sh SHELL
+ps aux
+
+#to attach container
+docker attach my-ubuntu
+
+#to stop cotainer
+docker stop my-ubuntu
+
+after exec into container we can check env through EXPORT command
+
+#to stop all running containers
+docker stop $(docker container ls -q)
+
+
+### Remove a container
+docker rm my-ubuntu
+
+### Remove all stopped containers
+docker container prune
+
+### Remove container if stopped
+docker run --rm -it ubuntu:20.04
+
+ls -cpu - to check cpu
+free -ah - to check memory
+
+#to check memory of all container
+docker stats
+
+loadtest tool we can use to check latency and 
+loadtest --rps 1000 curl command 
+
+we need to do benchmarking to set resource limits value for a particular container.
+our application is computational then need more cpu
+if data process then need more memory.
+
+
+every container on top of read only image layer have the writble layer in that data is stored 
+bash directly go in working directory
+if we stop the container data is there
+if we remove container then only it will remove 
+so for state ful layer container need to attched some storage 
+
+check memory notion
+swap memory means disk memory 
+
+
+we can host in local as well as
+storage infra like nfs/ cephfs
+
+docker volume create vol1
+docker volume inspect vol1 - no one delete volume if this is used any container 
+
+
+suppose on vm2 we have nfs -server we are creating path
+in vm with container we need nfs-client 
+for nfs with docker check git of naga sir  batch 
+when we run docker image of postgres by default it is create volume docker managed volume and it is called as anonymous volume.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
+DAY 4 
+DOC NETWORKING NEED TO READ - CNM
+1 sandbox - network isolation - 
+2 endpoint - virtual etheret interfaces or consider as cable how container create to network
+3 network - group of endpoints , supposet different network drivers
+
+we have 5 network drivers 
+suppose we have 2 containers they have their own sandbox and endpoint,  we can take both container on one bridge network, by default bridge network driver only
+docker network create -d bridge my_bridge_network1
+if we inspect network we can get two things one is subnet and another is gateway that is most imp
+
+when we create container with bridge network , so when we do ip a - it gives two network loopback for internal connection, and 2nd one eth , also gives hostname.
+if we inspect container and network it will give infor about one another
+we can place it on one network multiple container
+we can ping aother ip of container while ping but it is not advisable as ip will change dynamic if container is restarted , so container is domain name so we can ping with domain name for connecting.
+we can checkup nslookup dns_name
+from same host also we can ping ip - but cant ping with dns_name
+
+when we make network in host ubuntu by default it screated one virtualeth so we can ping from host do cummunication in windows and mac cant possible
+suppose our nginx container running on same bridge network we can hit curl withsame suppose we want to curl outside host we need to do port mapping of phyiscal host 
+but when we do port mapping it will work
+
+so on same netwok if we have 3 network and we want to keep 2 private and one public so we need port mapping of that one
+so group related containers in single host then we can use bridge network.
+
+bridge netiowrk, volume, db, redis, worker, result vote
+default bridge network doesnt use dns resolutin
+
+if we unmap port we cant access outside, but we can set any reverse proxy like nginx(routes) he takes outside traffic only on one port then we can access it 
+in nginx.conf we mentioned host based or path based routing.
+main advantage we are isloating one network but disadvantage is that we need host ip always but due to nat network is slow in performance
+nat means container private adrrss need to translate host ip 
+
+so for this we have host network -its like deploying non containerize application any ouside traffic reach by host ip, nat is not envolevd so any public websites use host network
+
+so we can use haproxy for load balancing instead of nginx in host network and all the container 
+if we want to use dns name same container nginx or ha proxy inside bridge network  we can place else we have to use ip address
+
+
+third netowrk - none if we keep the containr in none network it will not getting any network standalone container no internal and external connection - batch processeing, migration, cronjob 
+
+
+4th network - every mchine uses layer 2 and layer 3 in networking so switch is in layer 2 any traffic come switch and then goest to phyiscal host
+macvlan network if container using this network each container is give unique mac address usifng macaddress its directly use as switch so container acts like a device its compleyety by pass host network and its use switches. but this macaddress need to map this to switches.
+
+if macaddress issue instead of macvlan we can use ipvlan macaddress is same but unique ip address of each container then container acts like real physical devices .
+all this network in same machine
+
+using this driver we cant connect another cotnaioner that are in different machine we need to use overlay network driever using this container sitting in one machine can connect other sitting in another container in another machine but we  need tomake this machine in one cluster docker use docker swarm but we can use instead of docker swarm we can use k8s 
+
+k8s follow CNI(standard) plugin - callico , cillium this all are networking plugin
+Calico and Cilium are both networking solutions used in Kubernetes environments for network policies, traffic management, and security. They are often used to provide network connectivity, security, and observability within Kubernetes clusters. Although both serve similar purposes in some ways, they differ in their approaches and underlying technologies.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Day 5
+if we want to change we need to change in local dns /etc/hosts ip and header- vote.example.com result.example.com
+if we put nginx container in bridge network performance issue with bridge network we need to pass from host then only nginx , nat is involved network address transmission due to that latency issue 
+host-bridge-container
+so instedad of placing in bridge network we can put in the host network
+host-container- any oackets we sending to host its directly hitting container both machine address and container ip address is same only in this case
+if container is not part of bridge dns not working so in nginx.conf file we need to mention ip address only.
+
+if we want to resolve this dns issue we can put same nginx container in host as well as in bridge network also.
+if we think multihost then we can think overlay with docker swarm
+
+suppose we have single container in one host it is easy but working with microservices - build/ push an image for each service, create volumes, create networks, start each container in order, restart/stop each container, 
+but its hectic to do individually so for this we have tool docker-compose we can do at a time with docker-compose.
+it is multicontainer mamangement tool, older version docker-compose now docker compose. its need compose configuration files.
+
+in docker-compose we can mentions build instead of image if our image is  not created yet, it is mamanaged container in single host
+podman is not dameon based.
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+WHY DO WE NEED K8S
+- multi-host networking container difficult
+- scaling container
+- service discovery(where to communicate)
+- load balancing
+- scheduling container across nodes (right performance in right place)
+- security
+- deployment and application updates.
+- monitoring, logging and debugging
+-secutiry and access controls
+- multiclous and hybrid cloud deployments
+- ci/cd automation challengs
+
+if we have less than 5 container and single host then we can go with docker
+if not then go for k8s.
+k8s internally now use container d as both are cncf project
+k8s availble from redhat also called openshift.
+
+CHALLENGES WITH MICROSERVICES
+- synchronous communication 
+- keeping the configuration up to date
+- its hard to track request
+
+DESIGN PATTERN FOR MICROSERVICES
+- service discovery (according to load we can scale up and scale down instance but ip address changed so we need service discovery)
+- Edge (gateway/load balancer) server - we need to hide our services external to client so we need gateway like nginx or ha proxy)
+- Reactive Microservices - event producer other services two services communicte through kafka we can scale consumer with more isntance - scalability, fault tolerance 
+- Central Configuration - k8s have config map to store central 
+- Centralized log analysis 
+- Distributed Tracing
+- Circuit braking - we can defie timeout, retry, fallback (plan b),circuit braker - automaically failing execution indefinete wait or timeout by the clients, bulkhead - isolate failures (we can have multiple threadpool for service not single one)
+-Controll Loop - e.g. k8s - operator - update desired state - state storega- read deisred state -control loop obersrve read actual state, analyze it, and act it it scale up update actual state according to desired if there is difference it wil automate.
+having k8 thousand cotainer we can manage.
+CNCF - k8s .
+k8s is bacially control loop for containerized application.
+
+
+challenges we can read from notes.
+
+k8s node can also said as master/control plane decision is make here
+k8s node -phyiscal or virautl machine and each note have container runtime(docker or containerd), and also have k8s api server like docker daemon this api server also contain database itslef name etcd(kind of redis). to speak with k8s node api server we have cli like kubectl/oc/uitool. using this we can send desired state to api server so this desired state intially stred in db etcd. now he act  it has assistance worker node there we create container.
+so k8s cluster include - master + worker nodes
+worker node - containe container runtime and has agent who do the work for this called as kubelet. each kubelet for each worker node.this agent do work on command based on the api server
+
+so whenever request comes in api server in master node master have sheduler also it checks where storage and all are ok it gives to api server then api server ask worker node agent to do the things
+then kubelet container will create container in worker node.
+controllers is in master node it check actual state is like only desired state - eg. controller - replica set, monitoring we can use thir part controller also, for all this controller we have controller manager also this maanger pass the events to contoller. this manager is connect to api server.
+minimum we keep 3 master node there is no limit on worker node.
+kubectl/oc internally convert into api call then it goes to api-server.
+
+for common certs we can place it in secrets its common to cluster only.
+
+
+to setup k8s cluster
+//local
+- minikube - sigle host for learning purpose
+- Kind - k8s in docker - each docker container acts like vm for us
+
+//production setup
+kubeadm, rancher tool to setup
+
+//cloud
+eks, aks, gks, redhat openshift.
+
+kubectl version
+kubectl config get-users
+
+check vs code for installing kind,while installing get bascic CNI netowrking plugin , also isntalled storage class, default user-name kind-kind-cluster, and clusters - kind-kind-cluster
+
+kubectl get nodes
+kubectl get nodes -o wide.
+
+
+k8s is all about resources - every resouce has certain functionality working with k8s is all about working with resources- we create,modify and delete resource.
+e.g. pod resource - purpose to create container(we cant create container directly)
+pv - to create storage volume , so every functionality we have resource we need to choose which we can use. and every resource has diffrent repsoosbility to work done
+kubectl api-resources - we can check how many resources learning k8s is nothing but learning this resource.
+some resources are nodewised or some are clusterwised only.
+each resouce version is api based so its shows version.
+we can use custom resources also like strimzi for kafka on k8s.
+
+the related resources all groups called as namespace
+kubectl get namespaces. to know the namespaces default is default namespace
+namespace we can create cluster level.
+kubernetes symbol also like a pilot who reads the actual state and check with desired state.
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DAY 6
+in ubuntu using multipass we can create vm.
+kubectl config get-clusters
+kubectl config get-users
+kubectl config get-contexts
+
+
+//to know the cluster info
+kubectl cluster-info --context kind-kindcluster 
+
+//to alias kubectl name
+alias k=kubectl
+
+//how to work k8s
+create/modify/delete k8s resources.
+
+//to get api-resources
+k api-resources
+
+like for create container - pod, for centralized configs- configmap, for volumes - persistent volumes.
+
+//k api-versions
+core api is called v1 under this all api versions we have resources
+
+namespace - group related resources
+k get namespaces - default is default namespace
+
+//create a namespace
+k create namespace my-namespace
+
+ k config set-context --current --namespace=my-namespace
+ 
+ 
+ k get pods - to get pods
+ check create-pod lab
+ 
+ 
+ kubectl get pods
+kubectl run nginx --image=nginx - ideally we cant run the command using pod resource file we can create
+kubectl get pods -o wide
+kubectl describe pod nginx
+kubectl delete pod nginx
+
+when we descirbe we get priority we get priority we can check 
+k8s all about events we can get info by desribe also 
+
+resource defination file(yaml)
+apiVesion: //like resource from which version k api-resources we can know
+kind: //like resource is of which kind k api-resources we can know 
+metadata:
+   name:
+   labels:
+   annotations:
+spec: //resource specifications from document we can get this is vary depend upon resources.
+
+we can use helm tool to autogenerate this yaml files.
+to create pod resource using pod defination file
+
+we can use only two container in single pod if they are related or need assistance also if they are in same pod then we no network between them just local host will work.
+
+kubectl apply -f pod.yaml - mostly we create resouce with apply only because if resource already created then it wil just update it.
+like proxy container also on the same pod.
+
+
+labeling container is good thing we can get reasonable layer to work become much easier
+
+kubectl logs nginx-pod 
+kubectl logs nginx-pod -f //tail logs
+
+if we create pod directly some bad happen then it cant restart
+
+we can create pod through controllers
+
+pod management controllers -
+1 ReplicationController -  it will set replica according to replication factor- but now it will depricated
+2 ReplicaSet - it is one of the controller also - it is modern controller only - it will advancement like matchlabels and match expressions. - but we have limitation - it will not work with rolling update , it just count it will not recreate container with new image, only change in replica it will work.
+2 Deployment - internally use rs for replicaset, this will recreate container, it will support rolling updates, we can check rollout status.check difference in doc, pod name random, scaling and deleting random, stateful set each pod has its own pvc, in deployment shared storage or ephermal , web appos, api servers use case
+4 StatefulSet - use case db, kafka, zookepper each pod has its own pvc, pod creation sequential, we have fixed dns names.
+5 DaemonSet - suppose we have monitoring pods its nothing but like daemon and we want eveyr node we need to give the separate node so for we can use daemon set . for every pod each node we can use.
+6 Job - short running services bash services, intialization and migration pod.
+7 CronJOb -  some job repeateda according to schedule.we have cron syntax to go with that 
+
+we can check document quick summary tis all the workload apis.
+
+
+so through replication-controller.yaml only we can create pod - in that template we are mentioned pod specifications
+selector we can give label info pod so according to selector it will adjust the replicas. 
+each pod we have differenet rc.
+
+when we are trying to create pod based on default algorithm it will schedule where it create pod.
+
+we can schedule base on node name manually
+
+2 dynamiccally we can select node using nodeselector by labels so dynamically it will choose which is better one
+kubernetes added default labels 
+thorugh node selector we can give labels and accoridng to it it will schedule
+
+node affinity - advanced node selector , if not matches we can give 2nd option 
+
+
+scheduling and storage we need to read from doc
+day 7 - scheduling , storage - pod level, host level, pv and pvc -it is request 
+pv means actual storage
+and pvc is request to storage.
+
+pv -accessmodes - suppose we have 2 pod on 2 each nodes
+check doc
+
+for configuration and cert we can use node level 
+pod level - RWOP
+host leveo - RWO
+reclaim policy - retain - so if pvc is deleted it dont delte pv
+in k8s we can create dynamic based pv, inside k8s we can install storage driver/provisioner its nothing but storage class - dynamically storaged - drivers who provisoned storage based on demand 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+day 8 in nfs server we need to create path on nfs server
+ and in each vm we need to install nfs client also.
+ but we need to create pv dynamically when pod up then we create 
+ inside k8s cluster we have storage class this guy allocating storage and get pv in nfs so this is dynamically provisoning pv.
+ storage class nothig but storage provisioner
+ 
+ networking CNI - container networking interface
+ based on CNI there is plugin avaible according to use case we can use plugin 
+ - kindnet (basic plugin), flannel third party , calico, celium
+ every k8s cluster comes with cni plugin for networking
+ CNI Behind scene is 
+ k get ds -n kube-system
+ ds - 1 pod per node
+ k get pods -n kube-system - kindnet pod netwoking pod
+ 
+ while creating pod by defualt k8s get private ip per container.
+ service discovery and load balancing is the requirement.
+ k8s provide service resource - it provide us service discovery and load balancer support
+ throguh labels we can assign pod through service, services comes with stable ip and dns name.
+ every worker has with kubelet another kubeproxy so with theset we can interact with service
+ service forwarded traffic to healthy pod 
+ service is not running application it is networking configuration at kubeproxy level.
+ service means network endpoint.
+ Internal service within cluster called as clusterIp-services.
+ 
+ so outside we want to connect then we need to use NodePort Service 
+ by rule we need to give node port above 30000
+ so node port service opens the port at every node level 
+ so now external app - node-ip:30000
+ so according to the use case we can decide
+ 
+ but we want every traffic on ingress 
+using linux bridge worker node all the pod can communicate.
+every nod eonctain linux bridge - and kubelet create pod so ethernedt on pod level and one is bridge level 
+and veth pair is created between them 
+cni this is behind do that
+so two pod in same node its connecting
+linux bridge connect also machine level also
+
+so for cross node communication due to routing table enableationg its connect cross node without node ip address.
+
+so routing table on each node is placed by plugins
+
+callico - BGP based networking
+
+if we want to centralised configuration we have resource config-map its by default it stored in etcd - non -sensitive information
+secrets resource - sensitive data
+healthy and ready - for health check.
+kubelete -liveness probe
+kube-proxy -readiness probe
+
+whenever its not live kubelete restart the pod 
+
+we have load balancer service and if we have k8s have cloud,then load balancer service on every node and need load balancer on cloud.
+
+draw back of the node port service is sharing node ip and port
+
+so we have ingress controller we have who take trafficc it has + routing rules (host based,path based )
+but ingress also its one pod so above that we need node port service. but
+but suppose we want to exposenode port than we can use ha proxy.
+
+
+kuberenetes doesnt have ingress by default 
+thorough third party tool we can use that 
+a load balancwr service in non cloud service act like node port.
+
+
+
+kubectl get ing 
+
+kubectl get pods -n ingress-nginx
+kubectl get svc -n ingress-nginx
+
+
+
+
+ 
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
